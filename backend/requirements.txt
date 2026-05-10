@@ -1,0 +1,17 @@
+fastapi
+uvicorn
+sqlalchemy
+alembic
+pydantic-settings
+python-jose
+passlib
+bcrypt
+python-multipart
+slowapi
+litellm
+httpx
+pypdf
+aiosqlite
+greenlet
+email-validator
+pytest
