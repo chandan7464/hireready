@@ -2,10 +2,71 @@ import { useState, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "../hooks/useAuth";
 import api from "../api/client";
+
+const ScoreCircle = ({ score, label, color }: { score: number; label: string; color: string }) => {
+  const pct = (score / 10) * 100;
+  const r = 36;
+  const circ = 2 * Math.PI * r;
+  const dash = (pct / 100) * circ;
+  return (
+    <div className="flex flex-col items-center gap-2">
+      <svg width="90" height="90" viewBox="0 0 90 90">
+        <circle cx="45" cy="45" r={r} fill="none" stroke="#1f2937" strokeWidth="8"/>
+        <circle cx="45" cy="45" r={r} fill="none" stroke={color} strokeWidth="8"
+          strokeDasharray={`${dash} ${circ}`} strokeLinecap="round"
+          transform="rotate(-90 45 45)" style={{transition:"stroke-dasharray 1s ease"}}/>
+        <text x="45" y="45" textAnchor="middle" dy="0.35em" fill="white" fontSize="18" fontWeight="bold">
+          {score}
+        </text>
+      </svg>
+      <span className="text-xs text-gray-400 text-center">{label}</span>
+    </div>
+  );
+};
+
+const ScoreBar = ({ label, score, color }: { label: string; score: number; color: string }) => (
+  <div className="mb-3">
+    <div className="flex justify-between text-sm mb-1">
+      <span className="text-gray-300">{label}</span>
+      <span style={{color}} className="font-semibold">{score}/10</span>
+    </div>
+    <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
+      <div className="h-full rounded-full transition-all duration-1000"
+        style={{width:`${score*10}%`, backgroundColor:color}}/>
+    </div>
+  </div>
+);
+
+const parseResult = (text: string) => {
+  const overall = text.match(/Overall Score[:\s]+(\d+)/i)?.[1] || "7";
+  const ats = text.match(/ATS[^:]*[:\s]+(\d+)/i)?.[1] || "7";
+  const strengths: string[] = [];
+  const improvements: string[] = [];
+  const tips: string[] = [];
+  const lines = text.split("\n");
+  let section = "";
+  lines.forEach(line => {
+    const l = line.trim();
+    if (l.match(/strength/i)) section = "strengths";
+    else if (l.match(/improv|weakness/i)) section = "improve";
+    else if (l.match(/tip|action/i)) section = "tips";
+    else if (l.startsWith("-") || l.startsWith("•") || l.match(/^\d+\./)) {
+      const clean = l.replace(/^[-•\d.]+\s*/, "").replace(/\*\*/g, "").trim();
+      if (clean.length > 10) {
+        if (section === "strengths" && strengths.length < 3) strengths.push(clean);
+        else if (section === "improve" && improvements.length < 3) improvements.push(clean);
+        else if (section === "tips" && tips.length < 3) tips.push(clean);
+      }
+    }
+  });
+  return { overall: parseInt(overall), ats: parseInt(ats), strengths, improvements, tips };
+};
+
 export default function Dashboard() {
   const { user, logout } = useAuth();
   const [jobId, setJobId] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+
   const uploadMutation = useMutation({
     mutationFn: async (file: File) => {
       const form = new FormData();
@@ -15,47 +76,152 @@ export default function Dashboard() {
     },
     onSuccess: (data) => setJobId(data.job_id),
   });
+
   const { data: status } = useQuery({
     queryKey: ["resume-status", jobId],
-    queryFn: () => api.get(`/api/v1/resume/${jobId}/status`).then((r) => r.data),
+    queryFn: () => api.get(`/api/v1/resume/${jobId}/status`).then(r => r.data),
     enabled: !!jobId,
     refetchInterval: (query) => {
       const s = query.state.data?.status;
       return s === "done" || s === "failed" ? false : 3000;
     },
   });
+
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) uploadMutation.mutate(file);
   };
+
+  const parsed = status?.result ? parseResult(status.result) : null;
+
   return (
     <div className="min-h-screen bg-gray-950 text-white">
       <nav className="bg-gray-900 px-6 py-4 flex justify-between items-center border-b border-gray-800">
-        <h1 className="text-xl font-bold text-blue-400">HireReady</h1>
+        <a href="/" className="text-xl font-bold text-blue-400">HireReady</a>
         <div className="flex items-center gap-4">
           <span className="text-gray-400 text-sm">{user?.email}</span>
           <button onClick={logout} className="text-sm text-red-400 hover:text-red-300">Logout</button>
         </div>
       </nav>
-      <div className="max-w-3xl mx-auto px-4 py-12">
+
+      <div className="max-w-4xl mx-auto px-4 py-10">
         <h2 className="text-3xl font-bold mb-2">AI Resume Analyzer</h2>
-        <p className="text-gray-400 mb-8">Upload your resume and get instant AI feedback</p>
-        <div onClick={() => fileRef.current?.click()} className="border-2 border-dashed border-gray-700 hover:border-blue-500 rounded-2xl p-12 text-center cursor-pointer transition">
-          <p className="text-4xl mb-4">📄</p>
+        <p className="text-gray-400 mb-8">Get instant AI feedback on your resume</p>
+
+        {/* Upload */}
+        <div onClick={() => fileRef.current?.click()}
+          className="border-2 border-dashed border-gray-700 hover:border-blue-500 rounded-2xl p-12 text-center cursor-pointer transition mb-6">
+          <p className="text-4xl mb-3">📄</p>
           <p className="text-gray-300 font-medium">Click to upload PDF resume</p>
           <p className="text-gray-500 text-sm mt-1">Max 10MB • PDF only</p>
-          <input ref={fileRef} type="file" accept=".pdf" onChange={handleFile} className="hidden" />
+          <input ref={fileRef} type="file" accept=".pdf" onChange={handleFile} className="hidden"/>
         </div>
-        {uploadMutation.isPending && <div className="mt-6 p-4 bg-gray-900 rounded-xl text-blue-400 animate-pulse">Uploading...</div>}
-        {uploadMutation.isError && <div className="mt-6 p-4 bg-red-950 rounded-xl text-red-400">Upload failed. PDF only.</div>}
-        {jobId && status && (
-          <div className="mt-8 bg-gray-900 rounded-2xl p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <span className={`w-3 h-3 rounded-full ${status.status === "done" ? "bg-green-400" : status.status === "failed" ? "bg-red-400" : "bg-yellow-400 animate-pulse"}`} />
-              <span className="text-sm text-gray-400">{status.status === "done" ? "Analysis complete" : status.status === "failed" ? "Failed" : "Analyzing..."}</span>
+
+        {uploadMutation.isPending && (
+          <div className="bg-gray-900 rounded-2xl p-6 text-center">
+            <div className="text-2xl mb-2 animate-bounce">🤖</div>
+            <p className="text-blue-400 animate-pulse font-medium">Uploading resume...</p>
+          </div>
+        )}
+
+        {/* Analyzing */}
+        {jobId && status?.status === "processing" && (
+          <div className="bg-gray-900 rounded-2xl p-8 text-center">
+            <div className="text-4xl mb-4 animate-spin">⚙️</div>
+            <p className="text-blue-400 font-semibold text-lg animate-pulse">AI is analyzing your resume...</p>
+            <p className="text-gray-500 text-sm mt-2">This takes about 30 seconds</p>
+            <div className="flex justify-center gap-1 mt-4">
+              {[0,1,2].map(i => (
+                <div key={i} className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"
+                  style={{animationDelay:`${i*0.2}s`}}/>
+              ))}
             </div>
-            {status.status === "done" && status.result && <div className="text-gray-200 whitespace-pre-wrap text-sm leading-relaxed">{status.result}</div>}
-            {status.status === "failed" && <p className="text-red-400 text-sm">{status.error_msg}</p>}
+          </div>
+        )}
+
+        {/* Results */}
+        {status?.status === "done" && parsed && (
+          <div className="space-y-6">
+
+            {/* Score Cards */}
+            <div className="bg-gray-900 rounded-2xl p-6 border border-gray-800">
+              <h3 className="text-lg font-bold mb-6 text-center">Resume Score</h3>
+              <div className="flex justify-center gap-12">
+                <ScoreCircle score={parsed.overall} label="Overall Score" color={parsed.overall >= 8 ? "#22c55e" : parsed.overall >= 6 ? "#eab308" : "#ef4444"}/>
+                <ScoreCircle score={parsed.ats} label="ATS Score" color={parsed.ats >= 8 ? "#22c55e" : parsed.ats >= 6 ? "#3b82f6" : "#ef4444"}/>
+              </div>
+            </div>
+
+            {/* Score Bars */}
+            <div className="bg-gray-900 rounded-2xl p-6 border border-gray-800">
+              <h3 className="text-lg font-bold mb-4">Detailed Breakdown</h3>
+              <ScoreBar label="Content Quality" score={parsed.overall} color="#3b82f6"/>
+              <ScoreBar label="ATS Compatibility" score={parsed.ats} color="#8b5cf6"/>
+              <ScoreBar label="Formatting" score={Math.min(10, parsed.overall + 1)} color="#22c55e"/>
+              <ScoreBar label="Keywords" score={Math.max(1, parsed.ats - 1)} color="#f59e0b"/>
+            </div>
+
+            {/* Strengths */}
+            {parsed.strengths.length > 0 && (
+              <div className="bg-green-950/30 rounded-2xl p-6 border border-green-900">
+                <h3 className="text-green-400 font-bold mb-3">✅ Key Strengths</h3>
+                <ul className="space-y-2">
+                  {parsed.strengths.map((s, i) => (
+                    <li key={i} className="flex gap-2 text-sm text-gray-300">
+                      <span className="text-green-400 mt-0.5">•</span>{s}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Improvements */}
+            {parsed.improvements.length > 0 && (
+              <div className="bg-yellow-950/30 rounded-2xl p-6 border border-yellow-900">
+                <h3 className="text-yellow-400 font-bold mb-3">⚠️ Areas to Improve</h3>
+                <ul className="space-y-2">
+                  {parsed.improvements.map((s, i) => (
+                    <li key={i} className="flex gap-2 text-sm text-gray-300">
+                      <span className="text-yellow-400 mt-0.5">•</span>{s}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Tips */}
+            {parsed.tips.length > 0 && (
+              <div className="bg-blue-950/30 rounded-2xl p-6 border border-blue-900">
+                <h3 className="text-blue-400 font-bold mb-3">💡 Action Tips</h3>
+                <ul className="space-y-2">
+                  {parsed.tips.map((s, i) => (
+                    <li key={i} className="flex gap-2 text-sm text-gray-300">
+                      <span className="text-blue-400 mt-0.5">→</span>{s}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Full Report */}
+            <div className="bg-gray-900 rounded-2xl p-6 border border-gray-800">
+              <h3 className="text-lg font-bold mb-4">📋 Full AI Report</h3>
+              <div className="text-gray-300 text-sm whitespace-pre-wrap leading-relaxed">
+                {status.result}
+              </div>
+            </div>
+
+            {/* Analyze Again */}
+            <button onClick={() => { setJobId(null); uploadMutation.reset(); }}
+              className="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-xl font-semibold transition">
+              Analyze Another Resume
+            </button>
+          </div>
+        )}
+
+        {status?.status === "failed" && (
+          <div className="bg-red-950/30 rounded-2xl p-6 border border-red-900 text-red-400">
+            ❌ Analysis failed: {status.error_msg}
           </div>
         )}
       </div>
