@@ -9,7 +9,8 @@
     "moduleDetection": "force",
     "noEmit": true,
     "jsx": "react-jsx",
-    "strict": true
+    "strict": false,
+    "types": ["vite/client"]
   },
   "include": ["src"]
 }
