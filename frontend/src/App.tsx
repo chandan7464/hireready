@@ -6,6 +6,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import JobMatch from "./pages/JobMatch";
+import Interview from "./pages/Interview";
 
 const qc = new QueryClient();
 
@@ -28,6 +29,7 @@ function Router() {
   if (path === "/login") return <Login />;
   if (path === "/dashboard") return user ? <Dashboard /> : <Login />;
   if (path === "/job-match") return user ? <JobMatch /> : <Login />;
+  if (path === "/interview") return user ? <Interview /> : <Login />;
   return <Landing />;
 }
 
