@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useAuth } from "./hooks/useAuth";
+import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
@@ -23,8 +24,9 @@ function Router() {
   );
 
   if (path === "/register") return <Register />;
-  if (path === "/login" || !user) return <Login />;
-  return <Dashboard />;
+  if (path === "/login") return <Login />;
+  if (path === "/dashboard") return user ? <Dashboard /> : <Login />;
+  return <Landing />;
 }
 
 export default function App() {
