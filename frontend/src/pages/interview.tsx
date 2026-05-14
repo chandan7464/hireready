@@ -4,7 +4,7 @@ import { useAuth } from "../hooks/useAuth";
 import api from "../api/client";
 
 export default function Interview() {
-  const { user, logout } = useAuth();
+  const { logout } = useAuth();
   const [jobRole, setJobRole] = useState("");
   const [questions, setQuestions] = useState<string[]>([]);
   const [answers, setAnswers] = useState<Record<number, string>>({});
@@ -16,18 +16,13 @@ export default function Interview() {
       const res = await api.post("/api/v1/interview/generate", { job_role: jobRole });
       return res.data;
     },
-    onSuccess: (data) => {
-      setQuestions(data.questions);
-      setStep("questions");
-    },
+    onSuccess: (data) => { setQuestions(data.questions); setStep("questions"); },
   });
 
   const feedbackMutation = useMutation({
     mutationFn: async ({ idx, answer }: { idx: number; answer: string }) => {
       const res = await api.post("/api/v1/interview/feedback", {
-        question: questions[idx],
-        answer,
-        job_role: jobRole,
+        question: questions[idx], answer, job_role: jobRole,
       });
       return { idx, feedback: res.data.feedback };
     },
@@ -63,7 +58,7 @@ export default function Interview() {
             <button onClick={() => generateMutation.mutate()}
               disabled={generateMutation.isPending || !jobRole}
               className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 py-4 rounded-xl font-bold text-lg transition">
-              {generateMutation.isPending ? "Generating Questions..." : "Generate Interview Questions"}
+              {generateMutation.isPending ? "Generating..." : "Generate Interview Questions →"}
             </button>
           </div>
         ) : (
