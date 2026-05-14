@@ -8,19 +8,24 @@ export default function Landing() {
     fetchMe().then(() => {});
   }, []);
 
-  if (user) {
-    window.location.href = "/dashboard";
-    return null;
-  }
-
   return (
     <div className="min-h-screen bg-gray-950 text-white">
       {/* Navbar */}
       <nav className="flex justify-between items-center px-8 py-5 border-b border-gray-800">
         <h1 className="text-2xl font-bold text-blue-400">HireReady</h1>
-        <div className="flex gap-4">
-          <a href="/login" className="text-gray-400 hover:text-white transition">Sign In</a>
-          <a href="/register" className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg font-semibold transition">Get Started Free</a>
+        <div className="flex gap-4 items-center">
+          {user ? (
+            <>
+              <a href="/dashboard" className="text-gray-400 hover:text-white transition text-sm">Dashboard</a>
+              <a href="/templates" className="text-gray-400 hover:text-white transition text-sm">Templates</a>
+              <a href="/dashboard" className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg font-semibold transition text-sm">Go to App</a>
+            </>
+          ) : (
+            <>
+              <a href="/login" className="text-gray-400 hover:text-white transition">Sign In</a>
+              <a href="/resume-builder" className="text-gray-400 hover:text-white transition">Resume Builder</a><a href="/register" className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg font-semibold transition">Get Started Free</a>
+            </>
+          )}
         </div>
       </nav>
 

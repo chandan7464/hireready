@@ -71,3 +71,29 @@ async def job_match(
             "suggestions": text
         }
     return result
+
+from app.modules.resume.templates import detect_role, get_template, TEMPLATES
+
+@router.get("/templates")
+async def list_templates(
+    request: Request,
+    current_user = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return {"templates": TEMPLATES}
+
+@router.post("/detect-role")
+async def detect_resume_role(
+    request: Request,
+    file: UploadFile = File(...),
+    current_user = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    content = await service.extract_pdf_text(file)
+    role = detect_role(content)
+    template = get_template(role)
+    return {
+        "detected_role": role,
+        "template": template,
+        "message": f"Detected role: {template['name']}"
+    }

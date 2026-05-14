@@ -17,7 +17,7 @@ export const useAuth = () => {
   const logout = async () => {
     await api.post("/api/v1/auth/logout");
     clearUser();
-    window.location.href = "/login";
+    window.location.href = "/";
   };
 
   const fetchMe = async () => {

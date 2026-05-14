@@ -7,6 +7,8 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import JobMatch from "./pages/JobMatch";
 import Interview from "./pages/Interview";
+import Templates from "./pages/Templates";
+import ResumeBuilder from "./pages/ResumeBuilder";
 
 const qc = new QueryClient();
 
@@ -30,6 +32,9 @@ function Router() {
   if (path === "/dashboard") return user ? <Dashboard /> : <Login />;
   if (path === "/job-match") return user ? <JobMatch /> : <Login />;
   if (path === "/interview") return user ? <Interview /> : <Login />;
+  if (path === "/templates") return user ? <Templates /> : <Login />;
+  if (path === "/resume-builder") return user ? <ResumeBuilder /> : <Login />;
+  if (path === "/" || path === "/home") return <Landing />;
   return <Landing />;
 }
 
