@@ -1,3 +1,4 @@
+import TemplateGallery from "../components/TemplateGallery";
 import { useState, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "../hooks/useAuth";
@@ -197,6 +198,13 @@ export default function Dashboard() {
               className="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-xl font-semibold transition">
               Analyze Another Resume
             </button>
+
+            <TemplateGallery
+              detectedIndustry={parsed?.overall >= 7 ? "IT" : "Fresher"}
+              onSelect={(template) => {
+                window.location.href = `/resume-builder?template=${template.id}`;
+              }}
+            />
           </div>
         )}
 
