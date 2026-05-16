@@ -11,7 +11,7 @@ export default function Landing() {
   return (
     <div className="min-h-screen bg-gray-950 text-white">
       {/* Navbar */}
-      <nav className="flex justify-between items-center px-8 py-5 border-b border-gray-800">
+      <nav className="flex justify-between items-center px-4 md:px-8 py-4 border-b border-gray-800">
         <h1 className="text-2xl font-bold text-blue-400">HireReady</h1>
         <div className="flex gap-4 items-center">
           {user ? (
@@ -34,7 +34,7 @@ export default function Landing() {
         <div className="inline-block bg-blue-600/20 text-blue-400 px-4 py-1 rounded-full text-sm font-medium mb-6">
           🚀 AI-Powered Resume Analyzer
         </div>
-        <h1 className="text-6xl font-bold mb-6 leading-tight">
+        <h1 className="text-3xl md:text-6xl font-bold mb-6 leading-tight">
           Get Hired <span className="text-blue-400">Faster</span><br />with AI Resume Analysis
         </h1>
         <p className="text-xl text-gray-400 mb-10 max-w-2xl mx-auto">
