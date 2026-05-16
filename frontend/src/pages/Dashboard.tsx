@@ -7,7 +7,7 @@ import api from "../api/client";
 const ScoreCircle = ({ score, label, color }: { score: number; label: string; color: string }) => {
   const r = 36;
   const circ = 2 * Math.PI * r;
-  const dash = (score / 10) * circ;
+  const dash = (score / 100) * circ;
   return (
     <div className="flex flex-col items-center gap-2">
       <svg width="90" height="90" viewBox="0 0 90 90">
@@ -15,7 +15,7 @@ const ScoreCircle = ({ score, label, color }: { score: number; label: string; co
         <circle cx="45" cy="45" r={r} fill="none" stroke={color} strokeWidth="8"
           strokeDasharray={`${dash} ${circ}`} strokeLinecap="round"
           transform="rotate(-90 45 45)"/>
-        <text x="45" y="45" textAnchor="middle" dy="0.35em" fill="white" fontSize="18" fontWeight="bold">
+        <text x="45" y="45" textAnchor="middle" dy="0.35em" fill="white" fontSize="14" fontWeight="bold">
           {score}
         </text>
       </svg>
@@ -28,17 +28,17 @@ const ScoreBar = ({ label, score, color }: { label: string; score: number; color
   <div className="mb-3">
     <div className="flex justify-between text-sm mb-1">
       <span className="text-gray-300">{label}</span>
-      <span style={{color}} className="font-semibold">{score}/10</span>
+      <span style={{color}} className="font-semibold">{score}/100</span>
     </div>
     <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
-      <div className="h-full rounded-full" style={{width:`${score*10}%`, backgroundColor:color}}/>
+      <div className="h-full rounded-full" style={{width:`${score}%`, backgroundColor:color}}/>
     </div>
   </div>
 );
 
 const parseResult = (text: string) => {
-  const overall = parseInt(text.match(/Overall Score[:\s]+(\d+)/i)?.[1] || "7");
-  const ats = parseInt(text.match(/ATS[^:]*[:\s]+(\d+)/i)?.[1] || "7");
+  const overall = parseInt(text.match(/Overall Score[:\s]+(\d+)/i)?.[1] || "70");
+  const ats = parseInt(text.match(/ATS[^:]*[:\s]+(\d+)/i)?.[1] || "70");
   const lines = text.split("\n");
   const strengths: string[] = [];
   const improvements: string[] = [];
@@ -134,9 +134,9 @@ export default function Dashboard() {
               <h3 className="text-lg font-bold mb-6 text-center">Resume Score</h3>
               <div className="flex justify-center gap-12">
                 <ScoreCircle score={parsed.overall} label="Overall Score"
-                  color={parsed.overall >= 8 ? "#22c55e" : parsed.overall >= 6 ? "#eab308" : "#ef4444"}/>
+                  color={parsed.overall >= 80 ? "#22c55e" : parsed.overall >= 60 ? "#eab308" : "#ef4444"}/>
                 <ScoreCircle score={parsed.ats} label="ATS Score"
-                  color={parsed.ats >= 8 ? "#22c55e" : parsed.ats >= 6 ? "#3b82f6" : "#ef4444"}/>
+                  color={parsed.ats >= 80 ? "#22c55e" : parsed.ats >= 60 ? "#3b82f6" : "#ef4444"}/>
               </div>
             </div>
 
